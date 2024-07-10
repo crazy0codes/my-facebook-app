@@ -1,20 +1,14 @@
 // src/App.js
 import React from 'react';
+import { useState } from 'react';
 import FacebookLogin from './pages/FacebookLogin';
 import FacebookInsightsDashboard from './pages/Dashboard';
 
 
 function App() {
-  const [user, setUser] = React.useState({
-    name: null,
-    picture: {
-      data: {
-        url: null,
-      },
-    },
-  });
+  const [user, setUser] = React.useState({});
   const [error, setError] = React.useState(null);
-  // const [pages, setPages] = React.useState([]);
+  const [pages, setPages] = useState([]);
   // const [insights, setInsights] = React.useState({});
   // const [loading, setLoading] = React.useState(false);
 
@@ -22,14 +16,17 @@ function App() {
     <div className="App">
       {error && <p>{error}</p>}
       {user.name ?
-        <FacebookInsightsDashboard />
+        <FacebookInsightsDashboard
+         props={{
+            user,
+            pages
+         }}
+         />
         : <FacebookLogin
           props={{
             setUser,
-            setPages,
-            setInsights,
             setError,
-            setLoading
+            setPages
           }}
          />}
     </div>

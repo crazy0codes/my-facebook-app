@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { Button } from "../components/ui/button";
+import { setUserName, setUserProfile } from '../api/api';
 
-const FacebookLogin = ({setUser, setPages, setInsigths, setError}) => {
+
+const FacebookLogin = ({ props }) => {
+  const { setUser, setError , setPages} = props;
   const configId = process.env.REACT_APP_CONFIG_ID;
   const appId = process.env.REACT_APP_APP_ID;
   const redirectUri = process.env.REACT_APP_REDIRECT_URI;
@@ -39,9 +42,15 @@ const FacebookLogin = ({setUser, setPages, setInsigths, setError}) => {
     console.log('statusChangeCallback');
     console.log(response);
     if (response.status === 'connected') {
+      setUser( prev => ({
+        ...prev,
+        accessToken: response.authResponse.accessToken
+      }));
       fetchUserProfile();
+      localStorage.setItem('accessToken', response.authResponse.accessToken);
+      console.log(response.authResponse.accessToken);
     } else {
-      setError(response.status);
+      setError(() => response.status);
     }
   };
 
@@ -51,14 +60,16 @@ const FacebookLogin = ({setUser, setPages, setInsigths, setError}) => {
   };
 
   const fetchUserProfile = () => {
-    console.log('Fetching user profile');
-    window.FB.api('/me', { fields: 'name,email' }, function (response) {
-      console.log('Successful login for: ' + response.name);
-      setUser({
-        name: response.name,
-        email: response.email,
+    try {
+      console.log('Fetching user profile');
+      window.FB.api('/me', { fields: 'name,email' }, (response) =>  setUserName(response, setUser));
+      window.FB.api('/me/picture', {}, (response) => setUserProfile(response,setUser));
+      window.FB.api('/me/accounts', {}, (response) => {
+        setPages(() => response.data);
       });
-    });
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   return (

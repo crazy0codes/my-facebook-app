@@ -6,52 +6,71 @@ import { Calendar } from "../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
+import {
+  followers,
+  reactions,
+  impressions,
+  engagement,
+} from '../api/api';
 
-const FacebookInsightsDashboard = () => {
+const FacebookInsightsDashboard = ({ props }) => {
+  const { user, pages } = props;
+  const [insights, setInsights] = useState(null);
   const [since, setSince] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
   const [until, setUntil] = useState(new Date());
+  const [selectedPage, setSelectedPage] = useState({});
 
-  let user = {
-    name: "John Doe",
-    picture: {
-      data: {
-        url: null,
-      },
-    },
+
+
+  useEffect(() => {
+    if (selectedPage) {
+      fetchInsights();
+    }
+  }, [selectedPage, since, until]);
+
+  const fetchInsights = async () => {
+    const access_token = pages.find(page => page.id === selectedPage).access_token;
+    try {
+
+      setInsights(() =>{
+        async function fetchInsights() {
+          const followersData = await followers(selectedPage, access_token);
+          const reactionsData = await reactions(selectedPage, access_token);
+          const impressionsData = await impressions(selectedPage, access_token);
+          const engagementData = await engagement(selectedPage, access_token);
+          return {
+            page_fans: followersData,
+            page_reactions_total: reactionsData,
+            page_impressions: impressionsData,
+            page_engagement: engagementData,
+          };
+        }
+        return fetchInsights();
+      });
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    }
   };
-
-
-  let pages = [
-    {
-      id: "1",
-      name: "Page 1",
-    },
-    {
-      id: "2",
-      name: "Page 2",
-    },
-  ]; 
-
-  let insights = {
-    page_fans: 1000,
-    page_engagement: 2000,
-    page_impressions: 3000,
-    page_reactions_total: 4000,
-  };
-
+  
+  console.log('Insights:', insights);
+  
+  function handlePageChange(value) {
+    console.log(value);
+    setSelectedPage(value);
+  }
 
 
   return (
     <div className="p-8">
       {user && (
         <div className="flex items-center mb-8">
-          <img src={user.picture.data.url} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
+          <img src={user.url} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
           <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
         </div>
       )}
 
       <div className="mb-8">
-        <Select >
+        <Select onValueChange={handlePageChange} >
           <SelectTrigger className="w-[280px]">
             <SelectValue placeholder="Select a page" />
           </SelectTrigger>
