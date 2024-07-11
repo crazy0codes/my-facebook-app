@@ -7,7 +7,7 @@ export function setUserName(response, setUser) {
 }
 
 export function setUserProfile(response, setUser) {
-    const { url } = response.data;
+    const url = response.data.url;
     setUser((prev) => ({
         ...prev,
         url,
@@ -15,16 +15,29 @@ export function setUserProfile(response, setUser) {
 }
 
 
-
 const fetchFacebookData = async (pageId, metric, accessToken) => {
-    const response = await fetch(`https://graph.facebook.com/v17.0/${pageId}/insights/${metric}?access_token=${accessToken}`);
-    const data = await response.json();
-    console.log(`${metric}:`, data);
-    const { data: [rawData] } = data;
-    const { values: [firstArray] } = rawData;
-    const { value } = firstArray;
-    return value;
-};
+    try {
+      const response = await fetch(`https://graph.facebook.com/v17.0/${pageId}/insights/${metric}?access_token=${accessToken}`);
+      const obj = await response.json();
+      console.log('fetchFacebookData:', obj);
+  
+      // Check if the value is an object
+      const value = obj.data[0].values[0].value;
+      if (typeof value === 'object' && value !== null) {
+        return 0;
+      } else {
+        let sum = 0;
+        Object.keys(value).forEach((key) => {
+          sum += value[key];
+        });
+        return sum;
+      }
+    } catch (error) {
+      console.error('Error fetching Facebook data:', error);
+      return 0;
+    }
+  };
+  
 
 export const followers = (pageId, accessToken) => fetchFacebookData(pageId, 'page_follows', accessToken);
 export const reactions = (pageId, accessToken) => fetchFacebookData(pageId, 'page_actions_post_reactions_total/days_28', accessToken);

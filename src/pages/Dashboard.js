@@ -18,42 +18,44 @@ const FacebookInsightsDashboard = ({ props }) => {
   const [insights, setInsights] = useState(null);
   const [since, setSince] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
   const [until, setUntil] = useState(new Date());
-  const [selectedPage, setSelectedPage] = useState({});
+  const [selectedPage, setSelectedPage] = useState(null);
 
 
 
   useEffect(() => {
     if (selectedPage) {
-      fetchInsights();
+      const access_token = pages.find(page => page.id === selectedPage)?.access_token;
+      followers(selectedPage, access_token)
+        .then((data) => {
+          console.log('followers :', data);
+          setInsights((prev) => ({ ...prev, page_fans: data }))
+        })
+        .catch((error) => console.error(error));
+      reactions(selectedPage, access_token)
+        .then((data) => {
+          console.log('reactions :', data);
+          setInsights((prev) => ({ ...prev, page_reactions_total: data }))
+        })
+        .catch((error) => console.error(error));
+      impressions(selectedPage, access_token)
+        .then((data) => {
+          console.log('impressions :', data);
+          setInsights((prev) => ({ ...prev, page_impressions: data }))
+        })
+        .catch((error) => console.error(error));
+      engagement(selectedPage, access_token)
+        .then((data) => {
+          console.log('engagement :', data);
+          setInsights((prev) => ({ ...prev, page_engagement: data }))
+        })
+        .catch((error) => console.error(error));
+
     }
   }, [selectedPage, since, until]);
 
-  const fetchInsights = async () => {
-    const access_token = pages.find(page => page.id === selectedPage).access_token;
-    try {
 
-      setInsights(() =>{
-        async function fetchInsights() {
-          const followersData = await followers(selectedPage, access_token);
-          const reactionsData = await reactions(selectedPage, access_token);
-          const impressionsData = await impressions(selectedPage, access_token);
-          const engagementData = await engagement(selectedPage, access_token);
-          return {
-            page_fans: followersData,
-            page_reactions_total: reactionsData,
-            page_impressions: impressionsData,
-            page_engagement: engagementData,
-          };
-        }
-        return fetchInsights();
-      });
-    } catch (error) {
-      console.error('Error fetching insights:', error);
-    }
-  };
-  
   console.log('Insights:', insights);
-  
+
   function handlePageChange(value) {
     console.log(value);
     setSelectedPage(value);
