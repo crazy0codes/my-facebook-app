@@ -16,34 +16,32 @@ import {
 const FacebookInsightsDashboard = ({ props }) => {
   const { user, pages } = props;
   const [insights, setInsights] = useState(null);
-  const [since, setSince] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
-  const [until, setUntil] = useState(new Date());
+  const [since, setSince] = useState(Math.floor(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime()/1000));
+  const [until, setUntil] = useState(Math.floor(new Date().getTime()/1000));
   const [selectedPage, setSelectedPage] = useState(null);
-
-
 
   useEffect(() => {
     if (selectedPage) {
       const access_token = pages.find(page => page.id === selectedPage)?.access_token;
-      followers(selectedPage, access_token)
+      followers(selectedPage, access_token, since, until)
         .then((data) => {
           console.log('followers :', data);
           setInsights((prev) => ({ ...prev, page_fans: data }))
         })
         .catch((error) => console.error(error));
-      reactions(selectedPage, access_token)
+      reactions(selectedPage, access_token, since, until)
         .then((data) => {
           console.log('reactions :', data);
           setInsights((prev) => ({ ...prev, page_reactions_total: data }))
         })
         .catch((error) => console.error(error));
-      impressions(selectedPage, access_token)
+      impressions(selectedPage, access_token, since, until)
         .then((data) => {
           console.log('impressions :', data);
           setInsights((prev) => ({ ...prev, page_impressions: data }))
         })
         .catch((error) => console.error(error));
-      engagement(selectedPage, access_token)
+      engagement(selectedPage, access_token, since, until)
         .then((data) => {
           console.log('engagement :', data);
           setInsights((prev) => ({ ...prev, page_engagement: data }))
@@ -54,7 +52,6 @@ const FacebookInsightsDashboard = ({ props }) => {
   }, [selectedPage, since, until]);
 
 
-  console.log('Insights:', insights);
 
   function handlePageChange(value) {
     console.log(value);
@@ -66,7 +63,7 @@ const FacebookInsightsDashboard = ({ props }) => {
     <div className="p-8">
       {user && (
         <div className="flex items-center mb-8">
-          <img src={user.url} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
+          <img src={user.imgUrl} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
           <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
         </div>
       )}
@@ -89,14 +86,14 @@ const FacebookInsightsDashboard = ({ props }) => {
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {format(since, "PPP")}
+              {format(new Date(since * 1000), "PPP")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={since}
-              onSelect={setSince}
+              selected={new Date(since * 1000)}
+              onSelect={(date) => date && setSince(Math.floor(date.getTime() / 1000))}
               initialFocus
             />
           </PopoverContent>
@@ -105,14 +102,14 @@ const FacebookInsightsDashboard = ({ props }) => {
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {format(until, "PPP")}
+              {format(new Date(until * 1000), "PPP")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={until}
-              onSelect={setUntil}
+              selected={new Date(until * 1000)}
+              onSelect={(date) => date && setUntil(Math.floor(date.getTime() / 1000))}
               initialFocus
             />
           </PopoverContent>
